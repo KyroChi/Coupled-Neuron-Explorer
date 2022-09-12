@@ -48,7 +48,7 @@ class Grid(object):
     buttons = [
         [ 'back', None ],
         [ 'pause', None ],
-        [ 'pause', None ],
+        [ 'continue', None ],
         [ 'reset', None ],
         [ 'forward', None ]
     ]
@@ -254,8 +254,7 @@ class Explorer(object):
     fidelity = 10000
     time_range = sp.linspace(0, total_time, fidelity)
     voltage_range = sp.linspace(-100, 20, 1000)
-    solver = CoupledSolver()
-    solver.step_type = 'drop'
+    solver = None
 
     # Store the data to improve animation speed
     data = {
@@ -268,20 +267,28 @@ class Explorer(object):
 
     fig = plt.figure(figsize=(15,10))
     
-    def __init__(self):
+    def __init__(self, solver=None):
         slider_list = [
-                ['Initial Voltage', (-100, 30, 15)],
-                ['Step Amplitude', (-100, 10, 0)],
+                ['Initial Voltage', (-100, 30, 3)],
+                ['Step Amplitude', (-500, 10, 0)],
                 ['Step Start', (0, 5000, 1442)],
                 ['Step Duration', (0, 5000, 2615)],
                 ['Coupling Constant', (0, 10, 9.51)],
                 ['H-conductence', (0, 30, 2.18)],
+            [r'$m_h \:\zeta$',(1, 500, 1.32)],
+            [r'$m_h \:\xi$',(0.1, 200, 5.49)],
+            [r'$m_T \:\chi$', (1, 500, 3)],
             ['K leak', (0, 10, 9.62)],
             ['Na leak', (0, 10, 3.04)],
             ['p_t', (0, 1.8*10**5, 7*10**4)],
+            [r'$\beta$', (0, 1, 0.5)],
+            [r'$1/\tau_h$', (0, 50, 1)],
             ]
-        self.grid = Grid(self.fig, slider_list
-        )
+        self.grid = Grid(self.fig, slider_list, total_time=self.total_time)
+
+        self.solver = solver or CoupledSolver()
+        self.solver.step_type = 'drop'
+        
         # Set up the sliders and the button callbacks
         objects = self.grid.objects
         sliders = self.grid.sliders
@@ -348,7 +355,7 @@ class Explorer(object):
         """ """
         s = self.solver
         s.step_initial, s.step_amplitude, s.step_start, \
-            s.step_duration, s.ggj, s.gbar_h, s.g_kleak, s.g_naleak, s.p_T = (
+            s.step_duration, s.ggj, s.gbar_h, s.zeta, s.xi, s.chi, s.g_kleak, s.g_naleak, s.p_T, s.beta, s.one_tauh = (
                 slider[1].val for slider in self.grid.sliders
             )
 
@@ -363,8 +370,8 @@ class Explorer(object):
         s = self.solver
         
         solve = odeint(
-            s.coupled_system,
-            (s.Vrest, s.Vrest, s.hTrest, s.hTrest),
+            s.coupled_system_2,
+            (s.Vrest, s.Vrest, s.hTrest, s.hTrest, s.mhrest, s.mhrest),
             self.time_range
         )
 

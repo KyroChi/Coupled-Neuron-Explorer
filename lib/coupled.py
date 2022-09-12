@@ -22,6 +22,11 @@ class CoupledSolver(Solver):
     """
     g_kleak2 = Solver.g_kleak
     g_naleak2 = Solver.g_naleak
+    beta = 0.5
+    one_tauh = 1
+
+    alpha = 1
+    gamma = 1
     
     def I_Kleak (self, V, g_k):
         """ 
@@ -44,12 +49,12 @@ class CoupledSolver(Solver):
         """
         Combined leak channel
         """
-        return (self.g_kleak + self.g_naleak)*(V - (
+        I_0=self.step_initial*10**-3/self.S
+        return (self.g_kleak + self.g_naleak)*(V - ((
             self.g_kleak*self.E_kleak + \
             self.g_naleak*self.E_naleak)/(
-                self.g_kleak + self.g_naleak)
+                self.g_kleak + self.g_naleak) + I_0/(self.g_kleak + self.g_naleak))
         )
-
 
     def coupled_system(self, Y, t):
         """
@@ -69,15 +74,15 @@ class CoupledSolver(Solver):
         
         dV2_dt = (self.S/self.C*10**3) * \
                  (
-                     self.ggj*(V1 - V2) - \
+                     self.beta*self.ggj*(V1 - V2) - \
                      self.p_T*hT2*self.G(V2)*\
                      self.m_Tinf(V2)**2*10**-3 - \
                      self.gbar_h*self.m_hinf(V1)*(V1-self.E_h) -
                      self.I_leak(V2, 'injected')
                  )
         
-        dhT1_dt = self.dhT_dt(V1, hT1)
-        dhT2_dt = self.dhT_dt(V2, hT2)
+        dhT1_dt = self.alpha*self.dhT_dt(V1, hT1)
+        dhT2_dt = self.alpha*self.dhT_dt(V2, hT2)
         
         return dV1_dt, dV2_dt, dhT1_dt, dhT2_dt
 
@@ -109,28 +114,32 @@ class CoupledSolver(Solver):
         """
         V1, V2, hT1, hT2, mh1, mh2 = Y
         
-        dV1_dt = (1/self.C) * \
+        dV1_dt = (self.S/self.C*10**3) * \
                  (
-                     self.I_inj(t)*10**-3 -
-                     self.I_T_no_time(V1, hT1)*10**-5 -
-                     self.I_h(V1, mh1)*10**-2 -
-                     self.I_leak(V1)*10**-2 -
-                     self.ggj*(V1 - V2)*self.S*10**-2
+                     self.I_inj(t)/self.S*10**-3 - \
+                     self.p_T*hT1*self.G(V1)*\
+                     self.m_Tinf(V1)**2*10**-3 - \
+                     self.I_leak(V1, 'injected') - \
+                     self.I_h(V1, mh1)**2*10**-3 -\
+                     self.gbar_h*self.m_hinf(V1)*(V1-self.E_h) -
+                     self.ggj*(V1 - V2)
                  )
         
-        dV2_dt = (1/self.C) * \
+        dV2_dt = (self.S/self.C*10**3) * \
                  (
-                     self.ggj*(V1 - V2)*self.S*10**-2 -
-                     self.I_T_no_time(V2, hT2)*10**-5 -
-                     self.I_h(V2, mh2)*10**-2 -
-                     self.I_leak(V2)*10**-2
+                     self.beta*self.ggj*(V1 - V2) - \
+                     self.p_T*hT2*self.G(V2)*\
+                     self.m_Tinf(V2)**2*10**-3 - \
+                     self.gbar_h*self.m_hinf(V1)*(V1-self.E_h) -
+                     self.I_h(V2, mh2)**2*10**-3 -\
+                     self.I_leak(V2, 'injected')
                  )
         
-        dhT1_dt = self.dhT_dt(V1, hT1)
-        dhT2_dt = self.dhT_dt(V2, hT2)
+        dhT1_dt = self.alpha*self.dhT_dt(V1, hT1)
+        dhT2_dt = self.alpha*self.dhT_dt(V2, hT2)
 
-        dmh1_dt = self.dmh_dt(V1, mh1)
-        dmh2_dt = self.dmh_dt(V2, mh2)
+        dmh1_dt = self.gamma*self.dmh_dt(V1, mh1)
+        dmh2_dt = self.gamma*self.dmh_dt(V2, mh2)
         
         return (dV1_dt, dV2_dt, dhT1_dt, dhT2_dt, dmh1_dt,
                 dmh2_dt)

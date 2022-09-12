@@ -15,6 +15,7 @@ class Solver(object):
     fidelity = 10000
     Vrest = -61.5
     hTrest = 0.033
+    mhrest = 0.02
     # hTrest = 0.030
 
     c = '2d'
@@ -25,6 +26,7 @@ class Solver(object):
     C_ao = 2 * 10**-3
     C_ai = 0.05 * 10**-6
     ggj = 4.5
+    # ggj = 0
     # ggj = 4.5*10**-6
     g_kleak = 10
     # g_kleak = 1*10**-5
@@ -39,6 +41,10 @@ class Solver(object):
     R = 8.314472 # Gas constant
     p_T = 7*10**4
 
+    zeta = 1.32
+    xi = 5.49
+    chi = 3
+    
     table2 = {
         '3d': \
         (7 * 10**4, -53, -128, -12.8, -75, -461, -16),
@@ -116,11 +122,11 @@ class Solver(object):
         return self.table2[self.c][0]
 
     def m_hinf(self, V):
-        return 1 / ( 1 + sp.exp( (V + 82 ) / 5.49 ) )
+        return 1 / ( 1 + sp.exp( (V + 82 ) / self.xi ) )
 
     def tau_mh(self, V):
-        return (1/(0.0008 + 0.0000035*sp.exp(-0.05787*V) + \
-                   sp.exp(-1.87 + 0.0701*V)))/1.32
+        return ((1/(0.0008 + 0.0000035*sp.exp(-0.05787*V) + \
+                    sp.exp(-1.87 + 0.0701*V)))/1.32)
 
     def G(self, V):
         """ Linearized calicium cation function """
