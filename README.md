@@ -3,7 +3,7 @@
 This Python tool allows users to explore the dynamics of
 coupled neurons in an interactive setting.
 
-![Homepage](docs/home_view.png)
+![Explorer View](doc/home_view.png)
 
 For UNIX like systems, it is reccomended that you follow
 these steps to set up the system:
