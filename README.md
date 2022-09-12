@@ -1,7 +1,9 @@
-Python Coupled Neuron Explorer
+# Python Coupled Neuron Explorer
 
-This Python tool allows users to explore the dynamics that
-are presented by coupled neurons in an interactive setting.
+This Python tool allows users to explore the dynamics of
+coupled neurons in an interactive setting.
+
+![Homepage](docs/home_view.png)
 
 For UNIX like systems, it is reccomended that you follow
 these steps to set up the system:
